@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const cors = require('cors');
 const { randomBytes } = require('crypto');
+const axios = require('axios');
 
 app.use(express.json());
 app.use(cors())
@@ -13,18 +14,32 @@ app.get('/posts', (req, res) => {
 });
 
 //route to create post
-app.post('/posts', (req, res) => {
-    const id = randomBytes(4).toString('hex');
-    const { title } = req.body;
-    
-    posts[id] = {
-        id: id,
-        title: title
+app.post('/posts', async (req, res) => {
+    try{
+        const id = randomBytes(4).toString('hex');
+        const { title } = req.body; 
+        
+        posts[id] = {
+            id: id,
+            title: title
+        }
+        await axios.post('http://localhost:4005/events', {
+            type: 'PostCreated',
+            data: {
+                id,
+                title
+            }
+        })
+        return res.status(201).json({
+            post: posts[id]
+        })
+    }catch(error){
+        console.log('error', error)
     }
-
-    return res.status(201).json({
-        post: posts[id]
-    })
 })
 
-app.listen(4000, () => console.log('Running on port 4000'))
+app.post('/events', (req, res) => {
+    console.log('Event received:', req.body.type);
+    res.send({})
+})
+app.listen(4000, () => console.log('Posts service running on port 4000'))
