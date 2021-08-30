@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const cors = require('cors');
 const axios = require('axios');
-const { randomBytes} = require('crypto');
+const { randomBytes } = require('crypto');
 
 app.use(cors());
 app.use(express.json());
@@ -14,25 +14,29 @@ app.get('/posts/:id/comments', (req, res) => {
 })
 
 app.post('/posts/:id/comments', async (req, res) => {
-    const { content } = req.body;
-    if(!content) return res.status(401).json({message: "Comment content is empty"});
+    try {
+        const { content } = req.body;
+        if (!content) return res.status(401).json({ message: "Comment content is empty" });
 
-    const commentId = randomBytes(4).toString('hex');
-    const postId = req.params.id;
-    const comments = commentsByPostId[postId] || [];
+        const commentId = randomBytes(4).toString('hex');
+        const postId = req.params.id;
+        const comments = commentsByPostId[postId] || [];
 
-    comments.push({id: commentId, content: content, status: "pending" })  
-    commentsByPostId[postId] = comments;
-    await axios.post('http://localhost:4005/events',{
-        type: 'CommentCreated',
-        data: {
-            id: commentId,
-            content,
-            postId,
-            status: "pending"
-        }
-    })
-    res.status(201).json(comments);
+        comments.push({ id: commentId, content: content, status: "pending" })
+        commentsByPostId[postId] = comments;
+        await axios.post('http://localhost:4005/events', {
+            type: 'CommentCreated',
+            data: {
+                id: commentId,
+                content,
+                postId,
+                status: "pending"
+            }
+        })
+        res.status(201).json(comments);
+    } catch (error) {
+        console.log('Error', error)
+    }
 })
 
 app.post('/events', (req, res) => {
