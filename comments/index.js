@@ -39,9 +39,33 @@ app.post('/posts/:id/comments', async (req, res) => {
     }
 })
 
-app.post('/events', (req, res) => {
-    console.log('Event received:', req.body.type);
-    res.send({})
+app.post('/events', async (req, res) => {
+    try {
+        console.log('Event received:', req.body.type);
+
+        const { type, data } = req.body;
+        
+        if(type == 'CommentModerated'){
+            const {id, content, status, postId } = data;
+
+            const comment = commentsByPostId[postId].find(comment => {
+                return comment.id == id;
+            });
+            comment.status = status;
+            await axios.post('http://localhost:4005/events', {
+                type: 'CommentUpdated',
+                data: {
+                    id: id,
+                    content: content,
+                    postId: postId,
+                    status: status
+                }
+            })
+        }
+        res.send({})
+    } catch (error) {
+        console.log('Error:', error)
+    }
 })
 
 app.listen(4001, () => console.log("Comments service listening on port 4001"));
