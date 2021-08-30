@@ -21,14 +21,15 @@ app.post('/posts/:id/comments', async (req, res) => {
     const postId = req.params.id;
     const comments = commentsByPostId[postId] || [];
 
-    comments.push({id: commentId, content: content })  
+    comments.push({id: commentId, content: content, status: "pending" })  
     commentsByPostId[postId] = comments;
     await axios.post('http://localhost:4005/events',{
         type: 'CommentCreated',
         data: {
             id: commentId,
             content,
-            postId
+            postId,
+            status: "pending"
         }
     })
     res.status(201).json(comments);
